@@ -8,9 +8,11 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
@@ -19,18 +21,23 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Random;
 
 public class ParkLayoutSimulator implements ApplicationListener, GestureDetector.GestureListener {
+    private static final boolean DEBUG_MODE = true;
+    private Vector2 worldDimensions;
     private Camera camera;
     private Viewport viewport;
     private SpriteBatch batch;
     private World world;
     private ArrayList<Body> bodies;
+    private Box2DDebugRenderer debugRenderer;
 
     @Override
     public void create() {
-        final Vector2 worldDimensions = FileParser.getWorldDimensions();
+        worldDimensions = FileParser.getWorldDimensions();
         float aspectRatio = (float) Gdx.graphics.getHeight() / (float) Gdx.graphics.getWidth();
         camera = new OrthographicCamera(worldDimensions.y * aspectRatio, worldDimensions.y);
         camera.position.set(worldDimensions.x / 2, worldDimensions.y / 2, 0);
@@ -40,6 +47,8 @@ public class ParkLayoutSimulator implements ApplicationListener, GestureDetector
         world = new World(gravity, true);
         bodies = FileParser.getBodies(world);
         setContactListener();
+        generateScreenBoundaryBodies();
+        debugRenderer = new Box2DDebugRenderer();
     }
 
     @Override
@@ -51,7 +60,7 @@ public class ParkLayoutSimulator implements ApplicationListener, GestureDetector
     @Override
     public void render() {
         camera.update();
-        world.step(Gdx.graphics.getDeltaTime(), 6, 2);
+        world.step(Gdx.graphics.getDeltaTime(), 1, 1);
         for (Body body : bodies)
             BodyManager.updateSpritePosition(body);
         Gdx.gl.glClearColor(0.5f, 0.5f, 0.5f, 0.5f);    // Gray
@@ -61,6 +70,10 @@ public class ParkLayoutSimulator implements ApplicationListener, GestureDetector
         for (Body body : bodies)
             BodyManager.getSprite(body).draw(batch);
         batch.end();
+        if(DEBUG_MODE) {
+            Matrix4 debugMatrix = batch.getProjectionMatrix().cpy();
+            debugRenderer.render(world, debugMatrix);
+        }
     }
 
     @Override
@@ -129,9 +142,9 @@ public class ParkLayoutSimulator implements ApplicationListener, GestureDetector
                 Body body1 = contact.getFixtureA().getBody();
                 Body body2 = contact.getFixtureB().getBody();
                 if (body1.getType().equals(BodyDef.BodyType.DynamicBody))
-                    body1.applyForceToCenter(MathUtils.random(0, 100), MathUtils.random(0, 100), true);
+                    body1.applyForceToCenter(randomValue(), randomValue(), true);
                 else if (body2.getType().equals(BodyDef.BodyType.DynamicBody))
-                    body2.applyForceToCenter(MathUtils.random(0, 100), MathUtils.random(0, 100), true);
+                    body2.applyForceToCenter(randomValue(), randomValue(), true);
                 else
                     throw new IllegalStateException();
             }
@@ -147,6 +160,19 @@ public class ParkLayoutSimulator implements ApplicationListener, GestureDetector
             @Override
             public void postSolve(Contact contact, ContactImpulse impulse) {
             }
+
+            private int randomValue() {
+                return new BigInteger(256, new Random()).intValue();
+            }
         });
+    }
+
+    private void generateScreenBoundaryBodies() {
+        int width = MathUtils.ceil(worldDimensions.x);
+        int height = MathUtils.ceil(worldDimensions.y);
+        bodies.add(BodyManager.generateScreenBoundaryBody(0, -1, width, 1, world));
+        bodies.add(BodyManager.generateScreenBoundaryBody(0, height, width, 1, world));
+        bodies.add(BodyManager.generateScreenBoundaryBody(-1, 0, 1, height, world));
+        bodies.add(BodyManager.generateScreenBoundaryBody(width, 0, 1, height, world));
     }
 }

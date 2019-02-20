@@ -53,7 +53,7 @@ class BodyManager {
         fixtureDef.shape = shape;
         fixtureDef.density = 1f;
         fixtureDef.filter.categoryBits = FIXED_ENTITY_BIT;
-        fixtureDef.filter.maskBits = 0;
+        fixtureDef.filter.maskBits = MOVABLE_ENTITY_BIT | FIXED_ENTITY_BIT;
         body.createFixture(fixtureDef);
         shape.dispose();    // Shape is the only disposable of the lot.
         return body;
@@ -73,7 +73,7 @@ class BodyManager {
         fixtureDef.shape = shape;
         fixtureDef.density = 1f;
         fixtureDef.filter.categoryBits = FIXED_ENTITY_BIT;
-        fixtureDef.filter.maskBits = 0;
+        fixtureDef.filter.maskBits = MOVABLE_ENTITY_BIT | FIXED_ENTITY_BIT;
         body.createFixture(fixtureDef);
         shape.dispose();    // Shape is the only disposable of the lot.
         return body;

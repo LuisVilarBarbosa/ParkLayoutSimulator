@@ -4,3 +4,5 @@ An application to automatically generate park layouts based on a set of physical
 For now, this application has only been tested on Android and Desktop using Android Studio.
 
 The creation of this application was started based on the tutorial present at https://www.gamefromscratch.com/page/LibGDX-Tutorial-series.aspx.
+
+This project has been canceled due to not being necessary anymore.

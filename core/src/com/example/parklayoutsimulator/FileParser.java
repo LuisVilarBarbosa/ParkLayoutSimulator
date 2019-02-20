@@ -9,6 +9,7 @@ import com.badlogic.gdx.utils.JsonValue;
 
 import java.util.ArrayList;
 
+// This class should handle negative values and cases where the file is not in the expected state.
 class FileParser {
     private static final String filename = "parameters.json";
     private static JsonValue parameters = new JsonReader().parse(new FileHandle(filename));
@@ -51,6 +52,7 @@ class FileParser {
             int height = movableParkingSpace.getInt("height");
             int quantity = movableParkingSpace.getInt("quantity");
             for (int i = 0; i < quantity; i++)
+                // Bodies shouldn't be placed always in the same place. What if there is a closed region where the body is placed? It cannot move outwards.
                 bodies.add(BodyManager.generateParkingSpace(worldDimensions.x / 2, worldDimensions.y / 2, width, height, world, BodyManager.MOVABLE_ENTITY_BIT));
         }
         return bodies;
